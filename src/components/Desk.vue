@@ -1,15 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref, unref } from "vue";
 import Note from "./Note.vue";
+import { generateBrightColor } from "../utils";
 
-const container = ref<HTMLElement | null>(null);
-const note = ref<HTMLElement | null>(null);
-
-function onMouseDown(e: MouseEvent) {
-  console.log(e.clientX, e.clientY);
-}
-
-const zIndex = ref(30);
+const desk = ref<HTMLElement | null>(null);
 
 function showDroppable(elem: HTMLElement) {
   const header = elem.querySelector(":first-child") as HTMLElement | null;
@@ -59,21 +53,16 @@ onMounted(() => {
 
       moveAt(_note, e.clientX, e.clientY);
 
-      _note.hidden = true;
       _note.style.pointerEvents = "none";
       const elUnder = document.elementFromPoint(e.clientX, e.clientY);
       _note.style.pointerEvents = "auto";
-
-      console.log("elUnder", elUnder);
 
       if (!elUnder) return;
       const droppable = elUnder.closest(
         "[data-droppable]"
       ) as HTMLElement | null;
-      console.log("droppable", droppable);
 
       if (!desk?.contains(droppable)) return;
-      // console.log("droppable", droppable);
 
       if (droppable !== currentDroppable) {
         if (!currentDroppable && droppable) {
@@ -103,6 +92,19 @@ onMounted(() => {
       desk.removeEventListener("mousemove", onMouseMove);
       if (currentDroppable) hideDroppable(currentDroppable);
       desk.onmouseup = null;
+
+      //save position
+      const noteId = _note.getAttribute("data-id");
+      if (noteId) {
+        const foundNote = notes.value.find(
+          (item) => item.id === Number(noteId)
+        );
+        if (foundNote) {
+          const rect = _note.getBoundingClientRect();
+          foundNote.points.x = rect.left;
+          foundNote.points.y = rect.top;
+        }
+      }
     };
   };
 
@@ -133,25 +135,60 @@ onMounted(() => {
 
   // _note.addEventListener("mousedown", onMouseDown);
 });
+
+interface Note {
+  text: string;
+  id: number;
+  background: string;
+  points: {
+    x: number;
+    y: number;
+  };
+}
+
+const notes = ref<Note[]>([
+  { text: "Занюхать бебру", id: 0, points: { x: 0, y: 0 }, background: "#fcc" },
+]);
+const id = ref(0);
+const addNote = () => {
+  notes.value.push({
+    text: "Пожрать беброчки",
+    id: ++id.value,
+    background: generateBrightColor(),
+    points: { x: 0, y: 0 },
+  });
+};
 </script>
 
 <template>
   <div class="w-full h-full bg-red-100">
     <div
-      ref="container"
+      ref="desk"
       id="desk"
       class="h-full w-full grid grid-cols-2 grid-rows-2 bg-white relative overflow-hidden"
     >
+      <button
+        @click.stop="addNote"
+        @mousedown.stop
+        class="w-20 h-20 bg-white rounded-full shadow-lg shadow-gray-400 absolute bottom-20 right-20 flex justify-center items-center transition-all duration-100 ease-in-out hover:bg-gray-200 active:bg-gray-300"
+      >
+        +
+      </button>
+      <Note
+        v-for="note in notes"
+        :key="note.id"
+        class="w-[200px] h-[200px] cursor-pointer absolute"
+        :style="{ top: note.points.x, left: note.points.y }"
+        :text="note.text"
+        :background="note.background"
+        :data-id="note.id"
+      />
       <div class="bg-red-300" data-droppable>
         <h2
           class="opacity-0 text-[32px] w-full text-center font-bold lowercase select-none transition-opacity duration-500 linear"
         >
           Срочно и важно
         </h2>
-        <Note
-          class="w-[200px] h-[200px] cursor-pointer"
-          text="Понюхать бебру"
-        />
       </div>
       <div class="bg-yellow-300" data-droppable>
         <h2
@@ -159,11 +196,6 @@ onMounted(() => {
         >
           Важно, но не срочно
         </h2>
-
-        <Note
-          class="w-[200px] h-[200px] !bg-slate-500 cursor-pointer"
-          text="Врезать шершавого"
-        />
       </div>
       <div class="bg-blue-300" data-droppable>
         <h2
@@ -171,11 +203,6 @@ onMounted(() => {
         >
           Срочно, но не важно
         </h2>
-
-        <Note
-          class="w-[200px] h-[200px] !bg-green-500 cursor-pointer"
-          text="Погонять лысого"
-        />
       </div>
       <div class="bg-green-300" data-droppable>
         <h2
