@@ -9,14 +9,12 @@ function showDroppable(elem: HTMLElement) {
   const header = elem.querySelector(":first-child") as HTMLElement | null;
   if (!header) return;
   header.style.opacity = "1";
-  elem.style.border = "8px solid red";
 }
 
 function hideDroppable(elem: HTMLElement) {
   const header = elem.querySelector(":first-child") as HTMLElement | null;
   if (!header) return;
   header.style.opacity = "0";
-  elem.style.border = "none";
 }
 
 onMounted(() => {
@@ -29,9 +27,8 @@ onMounted(() => {
     const _note = (target as HTMLElement).closest(
       "[data-draggable]"
     ) as HTMLElement;
-    console.log("note", _note);
+
     if (!_note || !desk.contains(_note)) return;
-    console.log("note", 1);
 
     _note.ondragstart = function () {
       return false;
@@ -152,10 +149,13 @@ const notes = ref<Note[]>([
 const id = ref(0);
 const addNote = () => {
   notes.value.push({
-    text: "Пожрать беброчки",
+    text: "",
     id: ++id.value,
     background: generateBrightColor(),
-    points: { x: 0, y: 0 },
+    points: {
+      x: 0,
+      y: 0,
+    },
   });
 };
 </script>
@@ -179,7 +179,7 @@ const addNote = () => {
         :key="note.id"
         class="w-[200px] h-[200px] cursor-pointer absolute"
         :style="{ top: note.points.x, left: note.points.y }"
-        :text="note.text"
+        v-model:text="note.text"
         :background="note.background"
         :data-id="note.id"
       />
@@ -189,6 +189,8 @@ const addNote = () => {
         >
           Срочно и важно
         </h2>
+
+        {{ notes }}
       </div>
       <div class="bg-yellow-300" data-droppable>
         <h2

@@ -5,6 +5,7 @@ export default {
     extend: {
       fontFamily: {
         "great-vibes": ["Great Vibes", "cursive"],
+        gabriela: ["Gabriela", "serif"],
       },
     },
   },

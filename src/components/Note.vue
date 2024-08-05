@@ -1,10 +1,18 @@
 <script setup lang="ts">
+import { computed, ref } from "vue";
+
 export interface NoteProps {
   text?: string;
   background?: string;
 }
 
 const props = defineProps<NoteProps>();
+const emit = defineEmits<{ (e: "update:text", text: string): void }>();
+
+const str = computed({
+  get: () => props.text ?? "",
+  set: (val) => emit("update:text", val),
+});
 </script>
 
 <template>
@@ -17,7 +25,19 @@ const props = defineProps<NoteProps>();
     data-draggable
     :style="{ background: props.background ?? '#fcc' }"
   >
-    {{ text }}
+    <div class="w-full h-full relative">
+      <label
+        for="textarea"
+        class="w-full h-full flex items-center justify-center text-black overflow-hidden text-center font-gabriela"
+      >
+        {{ str }}
+      </label>
+      <textarea
+        v-model="str"
+        id="textarea"
+        class="resize-none outline-none appearance-none bg-transparent overflow-hidden w-full h-full opacity-0 absolute inset-0"
+      />
+    </div>
   </div>
 </template>
 
